@@ -5,11 +5,12 @@ object MyApp extends App {
   val terminals = factory.terminals().list()
 
   val terminal = terminals.get(0)
+  terminal.waitForCardPresent(10000)
   val card = terminal.connect("*")
   val channel = card.getBasicChannel
 
   println("选择PSE:1PAY.SYS.DDF01")
-  var r = card.select("1PAY.SYS.DDF01", true)
+  var r = card.select("1PAY.SYS.DDF01", first = true)
   println(r)
   println(bytesToHex(r.getBytes))
   var tlv = new Tlv(r.getData)
@@ -23,7 +24,7 @@ object MyApp extends App {
   println(tlv.toString)
 
   println("选择应用")
-  r = card.select(tlv.findBy("4F").getValue, true)
+  r = card.select(tlv.findBy("4F").getValue, first = true)
   println(r)
   println(bytesToHex(r.getBytes))
   tlv = new Tlv(r.getData)

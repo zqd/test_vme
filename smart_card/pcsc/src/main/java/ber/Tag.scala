@@ -2,12 +2,10 @@ package ber
 
 import util.ConvertUtil
 
-class Tag private(rawTag: Array[Byte], startIndex: Int, len: Int) {
-  private val firstByte = ConvertUtil.getUnsignedValue(rawTag(startIndex))
+class Tag private(raw: Array[Byte], startIndex: Int, len: Int) {
+  private val firstByte = ConvertUtil.getUnsignedValue(raw(startIndex))
   private lazy val t = {
-    val cp = new Array[Byte](len)
-    rawTag.copyToArray(cp, startIndex)
-    cp
+    java.util.Arrays.copyOfRange(raw, startIndex, startIndex + len)
   }
 
   lazy val level = {
@@ -26,11 +24,11 @@ class Tag private(rawTag: Array[Byte], startIndex: Int, len: Int) {
 
   def getTag = t
 
-  def getHexTag = ConvertUtil.bytes2Hex(rawTag, "")
+  def getHexTag = ConvertUtil.bytes2Hex(raw, startIndex, len, "")
 
   private[ber] def getLen = len
 
-  override def toString = getHexTag
+  override def toString = s"tag = $getHexTag level = $level dataType = $dataType"
 }
 
 object Tag {
