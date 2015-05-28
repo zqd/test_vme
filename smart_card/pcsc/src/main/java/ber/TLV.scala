@@ -53,11 +53,11 @@ class TLV private(val tag: Tag, val len: Int, raw: Array[Byte], startIndex: Int 
 
   private def fill(prefix: String, sb: StringBuilder): Unit = {
     if (hasChild) {
-      sb.append(prefix).append("tag = ").append(tag.getTagDesc).append(" len = ").append(len).append("\n")
+      sb.append(prefix).append("tag = ").append(tag.getHexTag).append("(").append(tag.getTagDesc).append(")").append(" len = ").append(len).append("\n")
       val childPrefix = prefix + "  "
       children.foreach(_.fill(childPrefix, sb))
     } else {
-      sb.append(prefix).append("tag = ").append(tag.getTagDesc).append(" len = ").append(len).append(" val = ").
+      sb.append(prefix).append("tag = ").append(tag.getHexTag).append("(").append(tag.getTagDesc).append(")").append(" len = ").append(len).append(" val = ").
         append(ConvertUtil.bytes2Hex(value)).append("\n")
     }
   }
@@ -74,10 +74,8 @@ class TLV private(val tag: Tag, val len: Int, raw: Array[Byte], startIndex: Int 
       var i = 0
       var noFound = true
       while (i < children.length && noFound) {
-        if (children(i).tag.getHexTag == tag) {
-          ret = children(i)
-          noFound = false
-        }
+        ret =children(i).find(tag)
+        if (ret != null)  noFound = false
         i += 1
       }
       ret
@@ -87,9 +85,8 @@ class TLV private(val tag: Tag, val len: Int, raw: Array[Byte], startIndex: Int 
 
 object TLV {
   def apply(raw: Array[Byte], startIndex: Int = 0): TLV = {
-    val len = raw.indexWhere(!Tag.hasSubByte(_), startIndex) - startIndex + 1
-    val tag = Tag(raw, startIndex, len)
-    val l = raw(startIndex + len)
+    val tag = Tag(raw, startIndex)
+    val l = ConvertUtil.getUnsignedValue(raw(startIndex + tag.getLen))
     new TLV(tag, l, raw, startIndex + tag.getLen + 1)
   }
 

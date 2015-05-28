@@ -1,6 +1,11 @@
 import javax.smartcardio._
 import MyUtil._
+import ber.{Tag, TLV}
+
+import scala.xml.XML
+
 object MyApp extends App {
+  Tag.xml = XML.load(MyApp.getClass.getResource("/tag_des.xml"))
   val factory = TerminalFactory.getDefault
   val terminals = factory.terminals().list()
 
@@ -13,25 +18,25 @@ object MyApp extends App {
   var r = card.select("1PAY.SYS.DDF01", first = true)
   println(r)
   println(bytesToHex(r.getBytes))
-  var tlv = new Tlv(r.getData)
+  var tlv =TLV(r.getData)
   println(tlv.toString)
 
   println("读取应用ID")
-  r = card.readRecord(tlv.findBy("88").getValue()(0), 1)
+  r = card.readRecord(tlv.find("88").getValue.get(0), 1)
   println(r)
   println(bytesToHex(r.getBytes))
-  tlv = new Tlv(r.getData)
+  tlv =TLV(r.getData)
   println(tlv.toString)
 
   println("选择应用")
-  r = card.select(tlv.findBy("4F").getValue, first = true)
+  r = card.select(tlv.find("4F").getValue.get, first = true)
   println(r)
   println(bytesToHex(r.getBytes))
-  tlv = new Tlv(r.getData)
+  tlv =TLV(r.getData)
   println(tlv.toString)
 
   println("获取处理选项")
-  val pdol = Tlv.makeTlvBy(tlv.findBy("9F38").getValue)
+  val pdol = Tlv.makeTlvBy(tlv.find("9F38").getValue.get)
 
   for(t <- pdol) {
     println(t)
@@ -40,11 +45,11 @@ object MyApp extends App {
   r = card.getProcessingOptions(pdol)
   println(r)
   println(bytesToHex(r.getBytes))
-  tlv = new Tlv(r.getData)
+  tlv = TLV(r.getData)
   println(tlv.toString)
 
   println("读处理选项")
-  val aflsRaw = tlv.findBy("80").getValue
+  val aflsRaw = tlv.find("80").getValue.get
   val aip = aflsRaw.take(2)
   val afls = AFL.parseMultipleAFL(aflsRaw.drop(2))
 
@@ -53,7 +58,7 @@ object MyApp extends App {
       r = card.readRecord(afl.sfi, index)
       println(r)
       println(bytesToHex(r.getBytes))
-      tlv = new Tlv(r.getData)
+      tlv = TLV(r.getData)
       println(tlv.toString)
     }
   }

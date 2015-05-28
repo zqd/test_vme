@@ -1,7 +1,7 @@
 package ber
 
 import util.ConvertUtil
-import scala.xml.{Node, XML}
+import scala.xml.Node
 
 class Tag private(raw: Array[Byte], startIndex: Int, len: Int) {
   private val firstByte = ConvertUtil.getUnsignedValue(raw(startIndex))
@@ -37,23 +37,35 @@ class Tag private(raw: Array[Byte], startIndex: Int, len: Int) {
 object Tag {
   def apply(hexStr: String): Tag = apply(ConvertUtil.hex2Bytes(hexStr))
 
-  def apply(rawTag: Array[Byte]): Tag = apply(rawTag, 0, rawTag.length)
+  def apply(rawTag: Array[Byte]): Tag = apply(rawTag, 0)
 
-  def apply(rawTag: Array[Byte], startIndex: Int, len: Int): Tag = new Tag(rawTag, startIndex, len)
+  def apply(rawTag: Array[Byte], startIndex: Int): Tag = new Tag(rawTag, startIndex, getTagLen(rawTag, startIndex))
 
   def hasSubByte(firstByte: Byte) = (ConvertUtil.getUnsignedValue(firstByte) & 0x1F) == 0x1F
 
   var xml: Node = null
 
   def getTagDesc(tagHexStr: String): String = {
-    if(xml == null) tagHexStr
+    if(xml == null) "未知"
     else {
       val nodes = xml \\ "tag" filter(node => node.attribute("key").get.text == tagHexStr)
 
       if(nodes.length > 0)
         nodes(0).attribute("name").get.text
       else
-        tagHexStr
+        "未知"
     }
+  }
+
+  private def getTagLen(raw: Array[Byte], startIndex: Int): Int = {
+    var len = 1
+    var hasC = (ConvertUtil.getUnsignedValue(raw(startIndex)) & 0x1F) == 0x1F
+
+    while(hasC) {
+      hasC = (ConvertUtil.getUnsignedValue(raw(startIndex + len)) & 0x80) != 0
+      len += 1
+    }
+
+    len
   }
 }
