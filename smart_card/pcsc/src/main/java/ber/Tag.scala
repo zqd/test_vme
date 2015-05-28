@@ -1,6 +1,7 @@
 package ber
 
 import util.ConvertUtil
+import scala.xml.{Node, XML}
 
 class Tag private(raw: Array[Byte], startIndex: Int, len: Int) {
   private val firstByte = ConvertUtil.getUnsignedValue(raw(startIndex))
@@ -26,6 +27,8 @@ class Tag private(raw: Array[Byte], startIndex: Int, len: Int) {
 
   def getHexTag = ConvertUtil.bytes2Hex(raw, startIndex, len, "")
 
+  def getTagDesc = Tag.getTagDesc(getHexTag)
+
   private[ber] def getLen = len
 
   override def toString = s"tag = $getHexTag level = $level dataType = $dataType"
@@ -39,4 +42,18 @@ object Tag {
   def apply(rawTag: Array[Byte], startIndex: Int, len: Int): Tag = new Tag(rawTag, startIndex, len)
 
   def hasSubByte(firstByte: Byte) = (ConvertUtil.getUnsignedValue(firstByte) & 0x1F) == 0x1F
+
+  var xml: Node = null
+
+  def getTagDesc(tagHexStr: String): String = {
+    if(xml == null) tagHexStr
+    else {
+      val nodes = xml \\ "tag" filter(node => node.attribute("key").get.text == tagHexStr)
+
+      if(nodes.length > 0)
+        nodes(0).attribute("name").get.text
+      else
+        tagHexStr
+    }
+  }
 }

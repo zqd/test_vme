@@ -53,11 +53,11 @@ class TLV private(val tag: Tag, val len: Int, raw: Array[Byte], startIndex: Int 
 
   private def fill(prefix: String, sb: StringBuilder): Unit = {
     if (hasChild) {
-      sb.append(prefix).append("tag = ").append(tag.getHexTag).append(" len = ").append(len).append("\n")
+      sb.append(prefix).append("tag = ").append(tag.getTagDesc).append(" len = ").append(len).append("\n")
       val childPrefix = prefix + "  "
       children.foreach(_.fill(childPrefix, sb))
     } else {
-      sb.append(prefix).append("tag = ").append(tag.getHexTag).append(" len = ").append(len).append(" val = ").
+      sb.append(prefix).append("tag = ").append(tag.getTagDesc).append(" len = ").append(len).append(" val = ").
         append(ConvertUtil.bytes2Hex(value)).append("\n")
     }
   }
